@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Household Service Finder</title>
+
+    <!-- ===== CSS (Embedded) ===== -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 40px;
+            background: #0c1d36;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            padding: 80px 20px;
+            background: linear-gradient(#0c1d36c7, #0c1d36c7),
+            url('https://images.unsplash.com/photo-1581090700227-1e37b190418e');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+        }
+
+        .hero p {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        .hero-search {
+            margin-top: 25px;
+        }
+
+        .hero-search select, .hero-search button {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        .hero-search button {
+            background: #ffcc00;
+            cursor: pointer;
+            margin-left: 8px;
+            padding: 12px 20px;
+        }
+
+        /* WORKER SECTION */
+        .workers-section {
+            padding: 40px;
+        }
+
+        .worker-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 25px;
+        }
+
+        .worker-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            background: #fff;
+            transition: 0.3s;
+        }
+
+        .worker-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .worker-card h3 {
+            margin-bottom: 5px;
+        }
+
+        .worker-card button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: #0c1d36;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            width: 300px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 22px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #0c1d36;
+            color: white;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 30px;
+            }
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            .nav-links {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo">ServiceFinder</div>
+    <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#workers">Workers</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+    <h1>Find Trusted Household Services Instantly</h1>
+    <p>Locate workers in real-time — electricians, plumbers, carpenters & more.</p>
+
+    <div class="hero-search">
+        <select id="serviceType">
+            <option value="">Select Service Type</option>
+            <option value="Electrician">Electrician</option>
+            <option value="Plumber">Plumber</option>
+            <option value="Carpenter">Carpenter</option>
+        </select>
+        <button onclick="filterWorkers()">Search</button>
+    </div>
+</header>
+
+<!-- WORKERS SECTION -->
+<section id="workers" class="workers-section">
+    <h2>Available Service Workers</h2>
+    <div id="workerList" class="worker-container"></div>
+</section>
+
+<!-- BOOKING POPUP -->
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Book Service</h2>
+        <p id="workerName"></p>
+        <input type="text" placeholder="Your Name">
+        <input type="text" placeholder="Your Address">
+        <button>Confirm Booking</button>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer id="contact">
+    <p>© 2025 ServiceFinder. All Rights Reserved.</p>
+</footer>
+
+<!-- ===== JavaScript (Embedded) ===== -->
+<script>
+    // Worker database (demo)
+    const workers = [
+        { name: "Ravi Kumar", service: "Electrician", distance: "1.2 km", rating: 4.8 },
+        { name: "Amit Sharma", service: "Plumber", distance: "0.8 km", rating: 4.6 },
+        { name: "Sandeep Verma", service: "Carpenter", distance: "2.1 km", rating: 4.7 },
+        { name: "Rahul Singh", service: "Electrician", distance: "3.0 km", rating: 4.5 },
+    ];
+
+    // Display workers
+    function displayWorkers(list) {
+        const container = document.getElementById("workerList");
+        container.innerHTML = "";
+
+        list.forEach(worker => {
+            const card = document.createElement("div");
+            card.className = "worker-card";
+            card.innerHTML = `
+                <h3>${worker.name}</h3>
+                <p><strong>Service:</strong> ${worker.service}</p>
+                <p><strong>Distance:</strong> ${worker.distance}</p>
+                <p><strong>Rating:</strong> ⭐ ${worker.rating}</p>
+                <button onclick="openModal('${worker.name}')">Book Now</button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Filter by service type
+    function filterWorkers() {
+        const type = document.getElementById("serviceType").value;
+        const filtered = type ? workers.filter(w => w.service === type) : workers;
+        displayWorkers(filtered);
+    }
+
+    // Open modal
+    function openModal(name) {
+        document.getElementById("workerName").innerText = `Booking: ${name}`;
+        document.getElementById("bookingModal").style.display = "flex";
+    }
+
+    // Close modal
+    function closeModal() {
+        document.getElementById("bookingModal").style.display = "none";
+    }
+
+    // Load all workers on start
+    displayWorkers(workers);
+</script>
+
+</body>
+</html>
